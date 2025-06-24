@@ -78,8 +78,8 @@ class DellinTrack extends DataTransferObject
         $derivalTerminalId = $data['derival']['terminalId'] ?? null;
         $arrivalTerminalId = $data['arrival']['terminalId'] ?? null;
 
-        $derivalIsTerminal = (bool)$data['orderedDeliveryFromAddress'];
-        $arrivalIsTerminal = (bool)$data['orderedDeliveryToAddress'];
+        $derivalIsTerminal = $data['orderedDeliveryFromAddress'];
+        $arrivalIsTerminal = $data['orderedDeliveryToAddress'];
 
         $link = $orderId ? 'https://www.dellin.ru/tracker/orders/' . $orderId . '/' : '';
 
