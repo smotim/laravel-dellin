@@ -45,9 +45,17 @@ class DellinTrack extends DataTransferObject
     public ?int $derivalTerminalId;
 
     /**
+     * @var string|null
+     */
+    public ?string $derivalTerminalAddress;
+    /**
      * @var int|null
      */
     public ?int $arrivalTerminalId;
+    /**
+     * @var string|null
+     */
+    public ?string $arrivalTerminalAddress;
 
     /**
      * @var bool
@@ -103,18 +111,18 @@ class DellinTrack extends DataTransferObject
 
         return new self(
             [
-                'status'            => $data['stateName'] ?? null,
-                'price'             => (float)$price,
-                'link'              => $link,
-                'startDate'         => $derivalDate,
-                'receiveDate'       => $arrivalDate,
-                'warehousing'       => $warehousing,
-                'derivalTerminalId' => $derivalTerminalId,
+                'status'                 => $data['stateName'] ?? null,
+                'price'                  => (float)$price,
+                'link'                   => $link,
+                'startDate'              => $derivalDate,
+                'receiveDate'            => $arrivalDate,
+                'warehousing'            => $warehousing,
+                'derivalTerminalId'      => $derivalTerminalId,
                 'derivalTerminalAddress' => $derivalTerminalAddress,
-                'arrivalTerminalId' => $arrivalTerminalId,
+                'arrivalTerminalId'      => $arrivalTerminalId,
                 'arrivalTerminalAddress' => $arrivalTerminalAddress,
-                'derivalIsTerminal' => $derivalIsTerminal,
-                'arrivalIsTerminal' => $arrivalIsTerminal,
+                'derivalIsTerminal'      => $derivalIsTerminal,
+                'arrivalIsTerminal'      => $arrivalIsTerminal,
             ]
         );
     }
