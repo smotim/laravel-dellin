@@ -76,6 +76,8 @@ class DellinTrack extends DataTransferObject
         $orderId = $data['orderId'] ?? null;
         $price = $data['totalSum'] ?? 0;
         $derivalTerminalId = $data['derival']['terminalId'] ?? null;
+        $derivalTerminalAddress = $data['derival']['terminalAddress'] ?? null;
+        $arrivalTerminalAddress = $data['arrival']['terminalAddress'] ?? null;
         $arrivalTerminalId = $data['arrival']['terminalId'] ?? null;
 
         $derivalIsTerminal = !($data['orderedDeliveryFromAddress'] ?? false);
@@ -108,7 +110,9 @@ class DellinTrack extends DataTransferObject
                 'receiveDate'       => $arrivalDate,
                 'warehousing'       => $warehousing,
                 'derivalTerminalId' => $derivalTerminalId,
+                'derivalTerminalAddress' => $derivalTerminalAddress,
                 'arrivalTerminalId' => $arrivalTerminalId,
+                'arrivalTerminalAddress' => $arrivalTerminalAddress,
                 'derivalIsTerminal' => $derivalIsTerminal,
                 'arrivalIsTerminal' => $arrivalIsTerminal,
             ]
