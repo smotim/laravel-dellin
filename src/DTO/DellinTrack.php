@@ -45,9 +45,17 @@ class DellinTrack extends DataTransferObject
     public ?int $derivalTerminalId;
 
     /**
+     * @var string|null
+     */
+    public ?string $derivalTerminalAddress;
+    /**
      * @var int|null
      */
     public ?int $arrivalTerminalId;
+    /**
+     * @var string|null
+     */
+    public ?string $arrivalTerminalAddress;
 
     /**
      * @var bool
@@ -76,6 +84,8 @@ class DellinTrack extends DataTransferObject
         $orderId = $data['orderId'] ?? null;
         $price = $data['totalSum'] ?? 0;
         $derivalTerminalId = $data['derival']['terminalId'] ?? null;
+        $derivalTerminalAddress = $data['derival']['terminalAddress'] ?? null;
+        $arrivalTerminalAddress = $data['arrival']['terminalAddress'] ?? null;
         $arrivalTerminalId = $data['arrival']['terminalId'] ?? null;
 
         $derivalIsTerminal = !($data['orderedDeliveryFromAddress'] ?? false);
@@ -101,16 +111,18 @@ class DellinTrack extends DataTransferObject
 
         return new self(
             [
-                'status'            => $data['stateName'] ?? null,
-                'price'             => (float)$price,
-                'link'              => $link,
-                'startDate'         => $derivalDate,
-                'receiveDate'       => $arrivalDate,
-                'warehousing'       => $warehousing,
-                'derivalTerminalId' => $derivalTerminalId,
-                'arrivalTerminalId' => $arrivalTerminalId,
-                'derivalIsTerminal' => $derivalIsTerminal,
-                'arrivalIsTerminal' => $arrivalIsTerminal,
+                'status'                 => $data['stateName'] ?? null,
+                'price'                  => (float)$price,
+                'link'                   => $link,
+                'startDate'              => $derivalDate,
+                'receiveDate'            => $arrivalDate,
+                'warehousing'            => $warehousing,
+                'derivalTerminalId'      => $derivalTerminalId,
+                'derivalTerminalAddress' => $derivalTerminalAddress,
+                'arrivalTerminalId'      => $arrivalTerminalId,
+                'arrivalTerminalAddress' => $arrivalTerminalAddress,
+                'derivalIsTerminal'      => $derivalIsTerminal,
+                'arrivalIsTerminal'      => $arrivalIsTerminal,
             ]
         );
     }
