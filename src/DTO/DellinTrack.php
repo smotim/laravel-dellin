@@ -81,6 +81,61 @@ class DellinTrack extends DataTransferObject
     public ?int $deliveryDays;
 
     /**
+     * @var string|null
+     */
+    public ?string $derivalCity;
+
+    /**
+     * @var string|null
+     */
+    public ?string $arrivalCity;
+
+    /**
+     * @var string|null
+     */
+    public ?string $derivalTerminalName;
+
+    /**
+     * @var string|null
+     */
+    public ?string $arrivalTerminalName;
+
+    /**
+     * @var \Carbon\Carbon|null
+     */
+    public ?Carbon $actualReceiveDate;
+
+    /**
+     * @var \Carbon\Carbon|null
+     */
+    public ?Carbon $produceDate;
+
+    /**
+     * @var array|null
+     */
+    public ?array $additionalServices;
+
+    /**
+     * @var bool|null
+     */
+    public ?bool $isPaid;
+
+    /**
+     * @var float|null
+     */
+    public ?float $statedValue;
+
+    /**
+     * @var bool|null
+     */
+    public ?bool $withWebOrder;
+
+    /**
+     * @var float|null
+     */
+    public ?float $webOrderItemsSum;
+
+    /**
      * @var bool
      */
     public bool $derivalIsTerminal;
@@ -109,19 +164,26 @@ class DellinTrack extends DataTransferObject
         $derivalTerminalId = $data['derival']['terminalId'] ?? null;
         $derivalTerminalAddress = $data['derival']['terminalAddress'] ?? null;
         $derivalAddress = $data['derival']['address'] ?? null;
+        $derivalCity = $data['derival']['city'] ?? null;
+        $derivalTerminalName = $data['derival']['terminalName'] ?? null;
         $arrivalTerminalAddress = $data['arrival']['terminalAddress'] ?? null;
         $arrivalTerminalId = $data['arrival']['terminalId'] ?? null;
         $arrivalAddress = $data['arrival']['address'] ?? null;
-        
+        $arrivalCity = $data['arrival']['city'] ?? null;
+        $arrivalTerminalName = $data['arrival']['terminalName'] ?? null;
+
         $deliveryDays = isset($data['orderTimeInDays']['delivery']) ? (int) $data['orderTimeInDays']['delivery'] : null;
-        
+
         $deliveryType = null;
+        $additionalServices = null;
         $docs = $data['documents'] ?? [];
         foreach ($docs as $doc) {
-            if (($doc['type'] ?? '') === 'shipping' && !empty($doc['serviceKind'])) {
-                $deliveryType = DeliveryType::fromServiceKind($doc['serviceKind'])?->key;
-                if ($deliveryType) {
-                    break;
+            if (($doc['type'] ?? '') === 'shipping') {
+                if (!empty($doc['serviceKind']) && !$deliveryType) {
+                    $deliveryType = DeliveryType::fromServiceKind($doc['serviceKind'])?->key;
+                }
+                if (!empty($doc['services'])) {
+                    $additionalServices = $doc['services'];
                 }
             }
         }
@@ -143,6 +205,16 @@ class DellinTrack extends DataTransferObject
             $arrivalDate = Carbon::parse($data['orderDates']['arrivalToOspReceiver']);
         }
 
+        $actualReceiveDate = null;
+        if (isset($data['orderDates']['arrivalToReceiver'])) {
+            $actualReceiveDate = Carbon::parse($data['orderDates']['arrivalToReceiver']);
+        }
+
+        $produceDate = null;
+        if (isset($data['produceDate'])) {
+            $produceDate = Carbon::parse($data['produceDate']);
+        }
+
         if (isset($data['orderDates']['warehousing'])) {
             $warehousing = Carbon::parse($data['orderDates']['warehousing']);
         }
@@ -154,17 +226,28 @@ class DellinTrack extends DataTransferObject
                 'link'                   => $link,
                 'startDate'              => $derivalDate,
                 'receiveDate'            => $arrivalDate,
+                'actualReceiveDate'      => $actualReceiveDate,
+                'produceDate'            => $produceDate,
                 'warehousing'            => $warehousing,
                 'derivalTerminalId'      => $derivalTerminalId,
                 'derivalTerminalAddress' => $derivalTerminalAddress,
                 'derivalAddress'         => $derivalAddress,
+                'derivalCity'            => $derivalCity,
+                'derivalTerminalName'    => $derivalTerminalName,
                 'arrivalTerminalId'      => $arrivalTerminalId,
                 'arrivalTerminalAddress' => $arrivalTerminalAddress,
                 'arrivalAddress'         => $arrivalAddress,
+                'arrivalCity'            => $arrivalCity,
+                'arrivalTerminalName'    => $arrivalTerminalName,
                 'derivalIsTerminal'      => $derivalIsTerminal,
                 'arrivalIsTerminal'      => $arrivalIsTerminal,
                 'deliveryType'           => $deliveryType,
                 'deliveryDays'           => $deliveryDays,
+                'additionalServices'     => $additionalServices,
+                'isPaid'                 => $data['isPaid'] ?? null,
+                'statedValue'            => $data['statedValue'] ?? null,
+                'withWebOrder'           => $data['withWebOrder'] ?? null,
+                'webOrderItemsSum'       => $data['webOrderItemsSum'] ?? null,
             ]
         );
     }
