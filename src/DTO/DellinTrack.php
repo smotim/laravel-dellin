@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SergeevPasha\Dellin\DTO;
 
 use Carbon\Carbon;
+use SergeevPasha\Dellin\Enum\DeliveryType;
 use Spatie\DataTransferObject\DataTransferObject;
 
 class DellinTrack extends DataTransferObject
@@ -48,14 +49,36 @@ class DellinTrack extends DataTransferObject
      * @var string|null
      */
     public ?string $derivalTerminalAddress;
+
+    /**
+     * @var string|null
+     */
+    public ?string $derivalAddress;
+
     /**
      * @var int|null
      */
     public ?int $arrivalTerminalId;
+
     /**
      * @var string|null
      */
     public ?string $arrivalTerminalAddress;
+
+    /**
+     * @var string|null
+     */
+    public ?string $arrivalAddress;
+
+    /**
+     * @var string|null
+     */
+    public ?string $deliveryType;
+
+    /**
+     * @var int|null
+     */
+    public ?int $deliveryDays;
 
     /**
      * @var bool
@@ -85,8 +108,23 @@ class DellinTrack extends DataTransferObject
         $price = $data['totalSum'] ?? 0;
         $derivalTerminalId = $data['derival']['terminalId'] ?? null;
         $derivalTerminalAddress = $data['derival']['terminalAddress'] ?? null;
+        $derivalAddress = $data['derival']['address'] ?? null;
         $arrivalTerminalAddress = $data['arrival']['terminalAddress'] ?? null;
         $arrivalTerminalId = $data['arrival']['terminalId'] ?? null;
+        $arrivalAddress = $data['arrival']['address'] ?? null;
+        
+        $deliveryDays = isset($data['orderTimeInDays']['delivery']) ? (int) $data['orderTimeInDays']['delivery'] : null;
+        
+        $deliveryType = null;
+        $docs = $data['documents'] ?? [];
+        foreach ($docs as $doc) {
+            if (($doc['type'] ?? '') === 'shipping' && !empty($doc['serviceKind'])) {
+                $deliveryType = DeliveryType::fromServiceKind($doc['serviceKind'])?->key;
+                if ($deliveryType) {
+                    break;
+                }
+            }
+        }
 
         $derivalIsTerminal = !($data['orderedDeliveryFromAddress'] ?? false);
         $arrivalIsTerminal = !($data['orderedDeliveryToAddress'] ?? false);
@@ -119,10 +157,14 @@ class DellinTrack extends DataTransferObject
                 'warehousing'            => $warehousing,
                 'derivalTerminalId'      => $derivalTerminalId,
                 'derivalTerminalAddress' => $derivalTerminalAddress,
+                'derivalAddress'         => $derivalAddress,
                 'arrivalTerminalId'      => $arrivalTerminalId,
                 'arrivalTerminalAddress' => $arrivalTerminalAddress,
+                'arrivalAddress'         => $arrivalAddress,
                 'derivalIsTerminal'      => $derivalIsTerminal,
                 'arrivalIsTerminal'      => $arrivalIsTerminal,
+                'deliveryType'           => $deliveryType,
+                'deliveryDays'           => $deliveryDays,
             ]
         );
     }
