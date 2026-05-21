@@ -86,9 +86,19 @@ class DellinTrack extends DataTransferObject
     public ?string $derivalCity;
 
     /**
+     * @var int|null
+     */
+    public ?int $derivalCityId;
+
+    /**
      * @var string|null
      */
     public ?string $arrivalCity;
+
+    /**
+     * @var int|null
+     */
+    public ?int $arrivalCityId;
 
     /**
      * @var string|null
@@ -165,11 +175,13 @@ class DellinTrack extends DataTransferObject
         $derivalTerminalAddress = $data['derival']['terminalAddress'] ?? null;
         $derivalAddress = $data['derival']['address'] ?? null;
         $derivalCity = $data['derival']['city'] ?? null;
+        $derivalCityId = isset($data['derival']['cityId']) ? (int) $data['derival']['cityId'] : null;
         $derivalTerminalName = $data['derival']['terminalName'] ?? null;
         $arrivalTerminalAddress = $data['arrival']['terminalAddress'] ?? null;
         $arrivalTerminalId = $data['arrival']['terminalId'] ?? null;
         $arrivalAddress = $data['arrival']['address'] ?? null;
         $arrivalCity = $data['arrival']['city'] ?? null;
+        $arrivalCityId = isset($data['arrival']['cityId']) ? (int) $data['arrival']['cityId'] : null;
         $arrivalTerminalName = $data['arrival']['terminalName'] ?? null;
 
         $deliveryDays = isset($data['orderTimeInDays']['delivery']) ? (int) $data['orderTimeInDays']['delivery'] : null;
@@ -233,11 +245,13 @@ class DellinTrack extends DataTransferObject
                 'derivalTerminalAddress' => $derivalTerminalAddress,
                 'derivalAddress'         => $derivalAddress,
                 'derivalCity'            => $derivalCity,
+                'derivalCityId'          => $derivalCityId,
                 'derivalTerminalName'    => $derivalTerminalName,
                 'arrivalTerminalId'      => $arrivalTerminalId,
                 'arrivalTerminalAddress' => $arrivalTerminalAddress,
                 'arrivalAddress'         => $arrivalAddress,
                 'arrivalCity'            => $arrivalCity,
+                'arrivalCityId'          => $arrivalCityId,
                 'arrivalTerminalName'    => $arrivalTerminalName,
                 'derivalIsTerminal'      => $derivalIsTerminal,
                 'arrivalIsTerminal'      => $arrivalIsTerminal,
