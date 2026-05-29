@@ -10,9 +10,10 @@ Allows you to:
 * Find a Street by City ID and query string
 * Find Terminals in the City by City ID
 * Calculate a delivery
+* Find a track (order) by track number
 
 ## Pre-requirements
-You need to get Dellin API key, login and password.
+You need to get a Dellin API key. A login and password are required to fetch authenticated data (delivery type, full order details).
 Key can be obtained at https://dev.dellin.ru/registration
 
 ## Installation
@@ -21,43 +22,86 @@ Key can be obtained at https://dev.dellin.ru/registration
 ## Configuration
 This package has a few configuration values:
 <pre>
-'key'        => env('DELLIN_KEY', null),
-'login'      => env('DELLIN_LOGIN', null),
-'password'   => env('DELLIN_PASSWORD', null),
-'prefix'     => 'dellin',
+'key'      => env('DL_KEY', null),
+'login'    => env('DL_LOGIN', null),   // phone number: +7XXXXXXXXXX
+'password' => env('DL_PASSWORD', null),
+'prefix'   => 'dellin',
 'middleware' => ['web']
 </pre>
-If you only need to use DellinClient, you may completely skip this configuration. Otherwise, you can use default options and specify some data in .env file:
-* DELLIN_KEY
-* DELLIN_LOGIN
-* DELLIN_PASSWORD
+Specify the values in your `.env` file:
+* `DL_KEY` — API key
+* `DL_LOGIN` — phone number used to log in to dellin.ru (`+7XXXXXXXXXX` format)
+* `DL_PASSWORD` — password
 
-To make full use of predefined routes, you will need to publish config:
+To make full use of predefined routes, publish the config:
 <pre>
 php artisan vendor:publish --provider="SergeevPasha\Dellin\Providers\DellinServiceProvider" --tag="config"
 </pre>
-Now you can change routes prefix and middleware to whatever you need
 
-### Use Case #1
-After installing you may just import the client
-<pre>use SergeevPasha\Dellin\Libraries\DellinClient;</pre>
-Firstly let's initialize our client
+### Use Case #1 — Track lookup
 <pre>
-$client = new DellinClient('key');
-/* 
-    You may also authorize your user and get a session ID.
-    You may use it in getPrice() method to adjust prices (Authorized users have lower prices)
-*/
-$session = client->authorize('login', 'password);
+use SergeevPasha\Dellin\Libraries\DellinClient;
+
+$client = app(DellinClient::class); // or new DellinClient(config('dellin.key'))
+
+// Returns a cached session ID (28-day TTL). Requires DL_LOGIN and DL_PASSWORD.
+// Session unlocks authenticated fields: delivery type, service kind, etc.
+// Returns null if credentials are not configured.
+$sessionId = $client->getSession();
+
+// Invalidate the cached session (e.g. after receiving a 401 from the API).
+$client->forgetSession();
+
+// Find a track by order/waybill number. Automatically includes session if available.
+$track = $client->findByTrackNumber('61389220');
+
+// DellinTrack fields:
+// $track->status          — order status name (string|null)
+// $track->link            — tracking URL (string)
+// $track->price           — total order cost (float)
+// $track->startDate       — dispatch date (Carbon|null)
+// $track->receiveDate     — expected delivery date (Carbon|null)
+// $track->actualReceiveDate — actual delivery date (Carbon|null)
+// $track->warehousing     — paid storage start date (Carbon|null)
+// $track->deliveryDays    — estimated delivery days (int|null)
+// $track->deliveryType    — DeliveryType enum key: AUTO|EXPRESS|AVIA|LETTER|SMALL (string|null)
+//                           Requires authenticated session to be populated.
+// $track->derivalIsTerminal / $track->arrivalIsTerminal — bool
+// $track->derivalCityId / $track->arrivalCityId         — int|null
+// $track->derivalCity / $track->arrivalCity             — string|null
+// $track->derivalTerminalId / $track->arrivalTerminalId — int|null
+// $track->derivalTerminalName / $track->arrivalTerminalName — string|null
+// $track->derivalTerminalAddress / $track->arrivalTerminalAddress — string|null
+// $track->derivalAddress / $track->arrivalAddress       — street address (string|null)
+// $track->isPaid          — bool|null
+// $track->statedValue     — declared cargo value (float|null)
 </pre>
+
+### Use Case #2 — Price calculation
+<pre>
+use SergeevPasha\Dellin\Libraries\DellinClient;
+
+$client = app(DellinClient::class);
+
+// Optionally authorize to get personalized prices
+$session = $client->authorize();  // uses DL_LOGIN / DL_PASSWORD from config
+
+// Build a Delivery object and get a price
+$price = $client->getPrice(Delivery::fromArray([...]));
+</pre>
+
 Now we can use these methods:
 <pre>
 $client->findCity(string $query)
 $client->findCityStreet(int $city, string $query)
 $client->getCityTerminals(int $city, bool $arrival = true)
+$client->findByTrackNumber(string $trackNumber)
+$client->getSession()
+$client->forgetSession()
 /* This one requires a Delivery Object, see next to see how to build it */
 $client->getPrice(Delivery $delivery)
 </pre>
+
 ## Delivery Object
 To build a Delivery object you will need to pass an array to fromArray() method just like that:<br>
 <pre>
@@ -159,9 +203,9 @@ Delivery::fromArray([
     TERMINAL = 1
 </pre>
 
-### Use Case #2
+### Use Case #3 — Predefined routes
 
-There are some predefined routes, that will be merged with your routes as well. You may check it by using
-<code>php artisan routes:list</code>
-It actually exposes the same methods to the routes, so it should be pretty clear on how to use it.
-For more information on how to use it, please check out `src/` folder.
+There are some predefined routes that will be merged with your routes. You may check them by running:
+<code>php artisan route:list</code>
+
+It exposes the same methods to HTTP routes. For more information check out the `src/` folder.
