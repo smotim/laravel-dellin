@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SergeevPasha\Dellin\Libraries;
 
 use GuzzleHttp\Client as GuzzleClient;
+use Illuminate\Support\Facades\Cache;
 use SergeevPasha\Dellin\DTO\Delivery;
 use SergeevPasha\Dellin\DTO\DellinTrack;
 use SergeevPasha\Dellin\Helpers\DellinHelper;
@@ -88,6 +89,39 @@ class DellinClient
     }
 
     /**
+     * Get or fetch a cached session ID.
+     * Session lives 30 days; cache for 28 to avoid using an about-to-expire one.
+     * Returns null if credentials are not configured.
+     */
+    public function getSession(): ?string
+    {
+        $login    = config('dellin.login');
+        $password = config('dellin.password');
+
+        if (!$login || !$password) {
+            return null;
+        }
+
+        $cacheKey = 'dellin_session_' . md5($login);
+
+        return Cache::remember($cacheKey, now()->addDays(28), function () use ($login, $password) {
+            $data = $this->request('v3/auth/login', compact('login', 'password'));
+            return $data['data']['sessionID'] ?? null;
+        });
+    }
+
+    /**
+     * Forget the cached session (call after receiving a session-expired error).
+     */
+    public function forgetSession(): void
+    {
+        $login = config('dellin.login');
+        if ($login) {
+            Cache::forget('dellin_session_' . md5($login));
+        }
+    }
+
+    /**
      * Find track by number
      *
      * @param string $trackNumber
@@ -96,12 +130,20 @@ class DellinClient
      */
     public function findByTrackNumber(string $trackNumber): DellinTrack
     {
-        $data = $this->request(
-            'v3/orders',
-            [
-                'docIds' => [$trackNumber],
-            ]
-        );
+        $params = ['docIds' => [$trackNumber]];
+
+        $sessionId = $this->getSession();
+        if ($sessionId) {
+            $params['sessionID'] = $sessionId;
+        }
+
+        $data = $this->request('v3/orders', $params);
+
+        // Session expired mid-cache-window — clear and retry once without session.
+        if (($data['metadata']['status'] ?? 200) === 401) {
+            $this->forgetSession();
+            $data = $this->request('v3/orders', ['docIds' => [$trackNumber]]);
+        }
 
         return DellinTrack::fromArray($data);
     }
