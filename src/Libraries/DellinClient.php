@@ -339,7 +339,7 @@ class DellinClient
         $payment = $builder->buildPayment($delivery->payment);
         $request = array_merge(
             [
-                'sessionID' => $delivery->session,
+                'sessionID' => $delivery->session ?? $this->getSession(),
                 'delivery'  => $deliveryRequest,
                 'cargo'     => $cargo,
                 'payment'   => $payment,
